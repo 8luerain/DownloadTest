@@ -37,4 +37,9 @@ public class DownloadService extends Service implements IDownloadService {
     public void cancelDownload() {
 
     }
+
+    @Override
+    public void continueDownload() {
+
+    }
 }

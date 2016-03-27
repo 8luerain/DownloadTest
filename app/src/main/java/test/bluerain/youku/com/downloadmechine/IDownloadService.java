@@ -14,4 +14,7 @@ public interface IDownloadService {
     void pauseDownload();
 
     void cancelDownload();
+
+    void continueDownload();
+
 }
