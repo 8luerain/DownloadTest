@@ -16,6 +16,8 @@ public class DownloadInfo {
 
     public int mVelocity;
 
+    public int mFileLength;
+
     public int mFileCurrentLength;
 
     public String mSavedPath;
@@ -23,7 +25,13 @@ public class DownloadInfo {
     public IDownloadInfoChangeListener mIDownloadInfoChangeListener;
 
 
+    public int getFileLength() {
+        return mFileLength;
+    }
 
+    public void setFileLength(int fileLength) {
+        mFileLength = fileLength;
+    }
 
     public String getmDownloadUrl() {
         return mDownloadUrl;

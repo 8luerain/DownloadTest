@@ -11,7 +11,7 @@ import java.net.URL;
  * Created by 8luerain.
  * Contact:<a href="mailto:8luerain@gmail.com">Contact_me_now</a>
  */
-public class NetworkFileEngine extends Thread {
+public class NetworkFileEngine implements Runnable {
 
 
     private int mFileOffset;
@@ -28,9 +28,9 @@ public class NetworkFileEngine extends Thread {
         this.mINetworkFileEngine = mINetworkFileEngine;
     }
 
-    public NetworkFileEngine(String mFileURLint, int mFileOffset, int length) {
+    public NetworkFileEngine(String fileURL, int mFileOffset, int length) {
         this.mFileOffset = mFileOffset;
-        this.mFileURL = mFileURL;
+        this.mFileURL = fileURL;
         this.mLengeth = length;
     }
 
@@ -48,7 +48,6 @@ public class NetworkFileEngine extends Thread {
 
     public void startEngin() {
         mSwither = true;
-        run();
     }
 
     public void stopEngin() {
@@ -58,7 +57,6 @@ public class NetworkFileEngine extends Thread {
 
     @Override
     public void run() {
-        super.run();
         InputStream inputStream = null;
         while (mSwither) {
             try {
@@ -72,12 +70,12 @@ public class NetworkFileEngine extends Thread {
                 httpURLConnection.setConnectTimeout(5000);
                 httpURLConnection.setReadTimeout(10000);
                 httpURLConnection.setRequestProperty("Range", "bytes="
-                        + mFileOffset + "-" + (mLengeth != -1 ? mLengeth+"" : ""));
+                        + mFileOffset + "-" + (mLengeth != -1 ? mLengeth + "" : ""));
                 httpURLConnection.connect();
                 inputStream = httpURLConnection.getInputStream();
                 if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     if (null != mINetworkFileEngine)
-                        mINetworkFileEngine.onGetSuccessed(inputStream);
+                        mINetworkFileEngine.onGetSuccessed(inputStream, httpURLConnection.getContentLength());
                 } else {
                     if (null != mINetworkFileEngine)
                         mINetworkFileEngine.onGetError("response error code is " + httpURLConnection.getResponseCode());
@@ -102,7 +100,7 @@ public class NetworkFileEngine extends Thread {
 
     public interface INetworkFileEngine {
 
-        void onGetSuccessed(InputStream inputStream);
+        void onGetSuccessed(InputStream inputStream, int contentLength);
 
         void onGetError(String errorMsg);
 

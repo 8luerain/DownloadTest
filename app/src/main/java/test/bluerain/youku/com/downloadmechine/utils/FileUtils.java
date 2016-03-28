@@ -14,12 +14,12 @@ import java.io.RandomAccessFile;
 public class FileUtils {
 
 
-    public static  File getFileFromPath(String path) {
+    public static File getFileFromPath(String path) {
         File file = new File(path);
         try {
-            if (!file.exists()){
+            if (!file.exists()) {
 
-                if(!file.getParentFile().exists()){
+                if (!file.getParentFile().exists()) {
                     file.getParentFile().mkdirs();
                 }
                 file.createNewFile();
@@ -30,9 +30,18 @@ public class FileUtils {
         return file;
     }
 
-    public static void closeQuilty(Closeable closeable){
 
-        if (null!= closeable){
+    public static boolean removeFileFromPath(String path) {
+        File file = new File(path);
+        if (!file.exists()) {
+            return true;
+        }
+        return file.delete();
+    }
+
+    public static void closeQuilty(Closeable closeable) {
+
+        if (null != closeable) {
             try {
                 closeable.close();
             } catch (IOException e) {
@@ -42,7 +51,6 @@ public class FileUtils {
 
 
     }
-
 
 
     public static boolean saveRandomAccessFile(RandomAccessFile file, int startLength, byte[] dataByte) {

@@ -5,6 +5,7 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import test.bluerain.youku.com.downloadmechine.IDownloadService;
 import test.bluerain.youku.com.downloadmechine.utils.FileUtils;
@@ -19,8 +20,14 @@ public class DownloadAbleStatus implements IDownloadService {
 
     private DownloadInfo mDownloadInfo;
 
-    public DownloadAbleStatus(DownloadInfo mDownloadInfo) {
+    private ThreadPoolExecutor mThreadPoolExecutor;
+
+    private DownloadTask mDownloadTask;
+
+    public DownloadAbleStatus(DownloadInfo mDownloadInfo, ThreadPoolExecutor executor, DownloadTask task) {
         this.mDownloadInfo = mDownloadInfo;
+        mThreadPoolExecutor = executor;
+        mDownloadTask = task;
     }
 
 
@@ -32,28 +39,33 @@ public class DownloadAbleStatus implements IDownloadService {
                 -1
         );
         mNetworkFileEngine.setmINetworkFileEngine(new NetworkFileEngine.INetworkFileEngine() {
+
             @Override
-            public void onGetSuccessed(InputStream inputStream) {
+            public void onGetSuccessed(InputStream inputStream, int contentLength) {
+                if (mDownloadInfo.getFileLength() == 0)
+                    mDownloadInfo.setFileLength(contentLength);
                 byte[] block = new byte[4096];
-                BufferedInputStream inputStream1 = null;
-                BufferedOutputStream outputStream = null;
+                BufferedInputStream bufferedInputStream = null;
+                BufferedOutputStream bufferedOutputStream = null;
                 int readCount = -1;
                 try {
-                    inputStream1 = new BufferedInputStream(inputStream);
-                    outputStream = new BufferedOutputStream(
+                    bufferedInputStream = new BufferedInputStream(inputStream);
+                    bufferedOutputStream = new BufferedOutputStream(
                             new FileOutputStream(FileUtils.getFileFromPath(mDownloadInfo.mSavedPath))
                     );
-                    while ((readCount = inputStream1.read(block)) != -1) {
+                    while ((readCount = bufferedInputStream.read(block)) != -1) {
                         int newLength = mDownloadInfo.getmFileCurrentLength() + readCount;
                         mDownloadInfo.setmFileCurrentLength(newLength);
-                        outputStream.write(block, 0, readCount);
+                        bufferedOutputStream.write(block, 0, readCount);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
-                    FileUtils.closeQuilty(inputStream1);
-                    FileUtils.closeQuilty(outputStream);
+                    FileUtils.closeQuilty(bufferedInputStream);
+                    FileUtils.closeQuilty(bufferedOutputStream);
                 }
+
+                mDownloadTask.setCurrentStatus(mDownloadTask.getDownloadedStatus());
 
             }
 
@@ -62,22 +74,28 @@ public class DownloadAbleStatus implements IDownloadService {
 
             }
         });
-        mNetworkFileEngine.startEngin();
-
+        if (null != mThreadPoolExecutor)
+            mThreadPoolExecutor.execute(mNetworkFileEngine);
     }
 
     @Override
     public void pauseDownload() {
-
+        if (null != mNetworkFileEngine) {
+            mNetworkFileEngine.stopEngin();
+        }
     }
 
     @Override
     public void cancelDownload() {
+        pauseDownload();
+        FileUtils.removeFileFromPath(mDownloadInfo.getmSavedPath());
 
     }
 
     @Override
     public void continueDownload() {
-
+        if (null != mNetworkFileEngine) {
+            startDownload();
+        }
     }
 }

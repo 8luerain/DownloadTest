@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
+import java.util.concurrent.ThreadPoolExecutor;
+
 import test.bluerain.youku.com.downloadmechine.IDownloadService;
 
 /**
@@ -14,6 +16,7 @@ import test.bluerain.youku.com.downloadmechine.IDownloadService;
  * Contact:<a href="mailto:8luerain@gmail.com">Contact_me_now</a>
  */
 public class DownloadService extends Service implements IDownloadService {
+
 
 
     @Nullable
