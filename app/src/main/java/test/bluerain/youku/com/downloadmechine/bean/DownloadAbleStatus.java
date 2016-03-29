@@ -60,6 +60,7 @@ public class DownloadAbleStatus implements IDownloadService {
                         bufferedOutputStream.write(block, 0, readCount);
                         long endTime = System.currentTimeMillis();
                         int velocity = caculateVelocity(lastTime, endTime, readCount);
+                        mDownloadInfo.setmProgress(calculateProgress(newLength, mDownloadInfo.getFileLength()));
                         mDownloadInfo.setmVelocity(velocity);
                         lastTime = endTime;
                     }
@@ -81,6 +82,10 @@ public class DownloadAbleStatus implements IDownloadService {
         });
         if (null != mThreadPoolExecutor)
             mThreadPoolExecutor.execute(mNetworkFileEngine);
+    }
+
+    private int calculateProgress(int newLength, int fileLength) {
+        return (int) ((newLength * 1.0 / fileLength) * 100);
     }
 
     @Override
