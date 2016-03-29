@@ -1,7 +1,5 @@
 package test.bluerain.youku.com.downloadmechine.bean;
 
-import test.bluerain.youku.com.downloadmechine.IDownloadService;
-
 /**
  * Project: DownloadMechine.
  * Data: 2016/3/25.
@@ -14,7 +12,7 @@ public class DownloadInfo {
 
     public int mProgress;
 
-    public int mVelocity;
+    public int mVelocity;  //下载速度，单位KB
 
     public int mFileLength;
 
@@ -46,7 +44,7 @@ public class DownloadInfo {
     }
 
     public void setmProgress(int mProgress) {
-        if (isNullListener())
+        if (!isNullListener())
             mIDownloadInfoChangeListener.onProgressChange(mProgress);
         this.mProgress = mProgress;
     }
@@ -56,7 +54,7 @@ public class DownloadInfo {
     }
 
     public void setmVelocity(int mVelocity) {
-        if (isNullListener())
+        if (!isNullListener())
             mIDownloadInfoChangeListener.onVelocityChange(mVelocity);
         this.mVelocity = mVelocity;
     }
@@ -66,7 +64,7 @@ public class DownloadInfo {
     }
 
     public void setmFileCurrentLength(int mFileCurrentLength) {
-        if (isNullListener())
+        if (!isNullListener())
             mIDownloadInfoChangeListener.onFileCurrentLengthChangeListener(mFileCurrentLength);
         this.mFileCurrentLength = mFileCurrentLength;
     }
@@ -80,7 +78,6 @@ public class DownloadInfo {
     }
 
 
-
     public void setIDownloadService(IDownloadInfoChangeListener mIDownloadInfoChangeListener) {
 
         this.mIDownloadInfoChangeListener = mIDownloadInfoChangeListener;
@@ -88,10 +85,11 @@ public class DownloadInfo {
 
     private boolean isNullListener() {
 
-        return mIDownloadInfoChangeListener == null ;
+        return mIDownloadInfoChangeListener == null;
 
     }
-    interface IDownloadInfoChangeListener {
+
+    public interface IDownloadInfoChangeListener {
 
         void onProgressChange(int progress);
 

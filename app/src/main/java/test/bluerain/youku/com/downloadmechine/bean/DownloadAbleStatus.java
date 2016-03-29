@@ -1,11 +1,13 @@
 package test.bluerain.youku.com.downloadmechine.bean;
 
+import android.util.Log;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
 
 import test.bluerain.youku.com.downloadmechine.IDownloadService;
 import test.bluerain.youku.com.downloadmechine.utils.FileUtils;
@@ -20,24 +22,22 @@ public class DownloadAbleStatus implements IDownloadService {
 
     private DownloadInfo mDownloadInfo;
 
-    private ThreadPoolExecutor mThreadPoolExecutor;
+    private ExecutorService mThreadPoolExecutor;
 
     private DownloadTask mDownloadTask;
 
-    public DownloadAbleStatus(DownloadInfo mDownloadInfo, ThreadPoolExecutor executor, DownloadTask task) {
+    public DownloadAbleStatus(DownloadInfo mDownloadInfo, ExecutorService executor, DownloadTask task) {
         this.mDownloadInfo = mDownloadInfo;
         mThreadPoolExecutor = executor;
         mDownloadTask = task;
+        mNetworkFileEngine = task.getNetworkFileEngine();
     }
 
 
     @Override
     public void startDownload() {
-        mNetworkFileEngine = new NetworkFileEngine(
-                mDownloadInfo.mDownloadUrl,
-                mDownloadInfo.mFileCurrentLength,
-                -1
-        );
+        Log.d("TAG", "download start ......");
+        mDownloadTask.setCurrentStatus(mDownloadTask.getDownloadingStatus());
         mNetworkFileEngine.setmINetworkFileEngine(new NetworkFileEngine.INetworkFileEngine() {
 
             @Override
@@ -47,16 +47,21 @@ public class DownloadAbleStatus implements IDownloadService {
                 byte[] block = new byte[4096];
                 BufferedInputStream bufferedInputStream = null;
                 BufferedOutputStream bufferedOutputStream = null;
-                int readCount = -1;
+                int readCount;
                 try {
                     bufferedInputStream = new BufferedInputStream(inputStream);
                     bufferedOutputStream = new BufferedOutputStream(
                             new FileOutputStream(FileUtils.getFileFromPath(mDownloadInfo.mSavedPath))
                     );
+                    long lastTime = System.currentTimeMillis();
                     while ((readCount = bufferedInputStream.read(block)) != -1) {
                         int newLength = mDownloadInfo.getmFileCurrentLength() + readCount;
                         mDownloadInfo.setmFileCurrentLength(newLength);
                         bufferedOutputStream.write(block, 0, readCount);
+                        long endTime = System.currentTimeMillis();
+                        int velocity = caculateVelocity(lastTime, endTime, readCount);
+                        mDownloadInfo.setmVelocity(velocity);
+                        lastTime = endTime;
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -80,22 +85,35 @@ public class DownloadAbleStatus implements IDownloadService {
 
     @Override
     public void pauseDownload() {
-        if (null != mNetworkFileEngine) {
-            mNetworkFileEngine.stopEngin();
-        }
+//        if (null != mNetworkFileEngine) {
+//            mNetworkFileEngine.stopEngin();
+//        }
+//        Log.d("TAG", "download pause ........");
     }
 
     @Override
     public void cancelDownload() {
-        pauseDownload();
-        FileUtils.removeFileFromPath(mDownloadInfo.getmSavedPath());
-
+//        pauseDownload();
+//        FileUtils.removeFileFromPath(mDownloadInfo.getmSavedPath());
+//        Log.d("TAG", "download cancel ........");
     }
 
     @Override
     public void continueDownload() {
-        if (null != mNetworkFileEngine) {
-            startDownload();
-        }
+//        if (null != mNetworkFileEngine) {
+        startDownload();
+//        }
+        Log.d("TAG", "download continue ........");
+    }
+
+
+    private int caculateVelocity(long lastTime, long endTime, int downloadSize) {
+
+        long during = (endTime - lastTime);
+        long time = during == 0 ? 1 : during;
+        long velocity = (long) (downloadSize / (time / 1000.0));
+
+        return (int) velocity;
+
     }
 }

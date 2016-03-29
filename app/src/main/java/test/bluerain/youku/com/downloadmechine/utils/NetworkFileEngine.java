@@ -1,5 +1,7 @@
 package test.bluerain.youku.com.downloadmechine.utils;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -16,7 +18,7 @@ public class NetworkFileEngine implements Runnable {
 
     private int mFileOffset;
 
-    private boolean mSwither;
+    private boolean mSwither = true;
 
     private String mFileURL;
 
@@ -57,44 +59,44 @@ public class NetworkFileEngine implements Runnable {
 
     @Override
     public void run() {
+        Log.d("TAG", "engine start........");
         InputStream inputStream = null;
-        while (mSwither) {
-            try {
-                URL url = new URL(mFileURL);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url
-                        .openConnection();
-                httpURLConnection.setRequestMethod("GET");
-                httpURLConnection.setRequestProperty("Accept-Encoding",
-                        "identity");
-                httpURLConnection.addRequestProperty("Connection", "keep-alive");
-                httpURLConnection.setConnectTimeout(5000);
-                httpURLConnection.setReadTimeout(10000);
-                httpURLConnection.setRequestProperty("Range", "bytes="
-                        + mFileOffset + "-" + (mLengeth != -1 ? mLengeth + "" : ""));
-                httpURLConnection.connect();
-                inputStream = httpURLConnection.getInputStream();
-                if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                    if (null != mINetworkFileEngine)
-                        mINetworkFileEngine.onGetSuccessed(inputStream, httpURLConnection.getContentLength());
-                } else {
-                    if (null != mINetworkFileEngine)
-                        mINetworkFileEngine.onGetError("response error code is " + httpURLConnection.getResponseCode());
+        try {
+            URL url = new URL(mFileURL);
+            HttpURLConnection httpURLConnection = (HttpURLConnection) url
+                    .openConnection();
+            httpURLConnection.setRequestMethod("GET");
+            httpURLConnection.setRequestProperty("Accept-Encoding",
+                    "identity");
+            httpURLConnection.addRequestProperty("Connection", "keep-alive");
+            httpURLConnection.setConnectTimeout(5000);
+            httpURLConnection.setReadTimeout(10000);
+            httpURLConnection.setRequestProperty("Range", "bytes="
+                    + mFileOffset + "-" + (mLengeth != -1 ? mLengeth + "" : ""));
+            httpURLConnection.connect();
+            inputStream = httpURLConnection.getInputStream();
+            if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK
+                    ||httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_PARTIAL
+                    ) {
+                if (null != mINetworkFileEngine)
+                    mINetworkFileEngine.onGetSuccessed(inputStream, httpURLConnection.getContentLength());
+            } else {
+                if (null != mINetworkFileEngine)
+                    mINetworkFileEngine.onGetError("response error code is " + httpURLConnection.getResponseCode());
 
-                }
-            } catch (IOException e) {
-                mINetworkFileEngine.onGetError("IO error");
-                e.printStackTrace();
-            } finally {
-                if (null != inputStream) {
-                    try {
-                        inputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+            }
+        } catch (IOException e) {
+            mINetworkFileEngine.onGetError("IO error");
+            e.printStackTrace();
+        } finally {
+            if (null != inputStream) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         }
-
     }
 
 

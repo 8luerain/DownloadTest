@@ -18,10 +18,6 @@ public class FileUtils {
         File file = new File(path);
         try {
             if (!file.exists()) {
-
-                if (!file.getParentFile().exists()) {
-                    file.getParentFile().mkdirs();
-                }
                 file.createNewFile();
             }
         } catch (IOException e) {
