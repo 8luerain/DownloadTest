@@ -16,12 +16,27 @@ public class DownloadInfo {
 
     public int mFileLength;
 
-    public int mFileCurrentLength;
+    public int mFileDownloadedLength;
 
     public String mSavedPath;
 
     public IDownloadInfoChangeListener mIDownloadInfoChangeListener;
 
+    public DownloadInfo() {
+        initParams();
+    }
+
+    private void initParams() {
+        setFileLength(0);
+        setFileDownloadedLength(0);
+        setProgress(0);
+        setVelocity(0);
+    }
+
+
+    public void resetDownloadInfo() {
+        initParams();
+    }
 
     public int getFileLength() {
         return mFileLength;
@@ -31,56 +46,56 @@ public class DownloadInfo {
         mFileLength = fileLength;
     }
 
-    public String getmDownloadUrl() {
+    public String getDownloadUrl() {
         return mDownloadUrl;
     }
 
-    public void setmDownloadUrl(String mDownloadUrl) {
+    public void setDownloadUrl(String mDownloadUrl) {
         this.mDownloadUrl = mDownloadUrl;
     }
 
-    public int getmProgress() {
+    public int getProgress() {
         return mProgress;
     }
 
-    public void setmProgress(int mProgress) {
+    public void setProgress(int mProgress) {
         if (!isNullListener())
             mIDownloadInfoChangeListener.onProgressChange(mProgress);
         this.mProgress = mProgress;
     }
 
-    public int getmVelocity() {
+    public int getVelocity() {
         return mVelocity;
     }
 
-    public void setmVelocity(int mVelocity) {
+    public void setVelocity(int mVelocity) {
         if (!isNullListener())
             mIDownloadInfoChangeListener.onVelocityChange(mVelocity);
         this.mVelocity = mVelocity;
     }
 
-    public int getmFileCurrentLength() {
-        return mFileCurrentLength;
+    public int getFileDownloadedLength() {
+        return mFileDownloadedLength;
     }
 
-    public void setmFileCurrentLength(int mFileCurrentLength) {
+    public void setFileDownloadedLength(int length) {
         if (!isNullListener())
-            mIDownloadInfoChangeListener.onFileCurrentLengthChangeListener(mFileCurrentLength);
-        this.mFileCurrentLength = mFileCurrentLength;
+            mIDownloadInfoChangeListener.onFileCurrentLengthChangeListener(length);
+        this.mFileDownloadedLength = length;
     }
 
-    public String getmSavedPath() {
+    public String getSavedPath() {
         return mSavedPath;
     }
 
-    public void setmSavedPath(String mSavedPath) {
+    public void setSavedPath(String mSavedPath) {
         this.mSavedPath = mSavedPath;
     }
 
 
-    public void setIDownloadService(IDownloadInfoChangeListener mIDownloadInfoChangeListener) {
+    public void setDownloadInfoChangeListener(IDownloadInfoChangeListener downloadInfoChangeListener) {
 
-        this.mIDownloadInfoChangeListener = mIDownloadInfoChangeListener;
+        this.mIDownloadInfoChangeListener = downloadInfoChangeListener;
     }
 
     private boolean isNullListener() {

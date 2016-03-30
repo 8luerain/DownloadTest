@@ -63,4 +63,31 @@ public class FileUtils {
         }
         return true;
     }
+
+    /**
+     * 计算文件的下载速度
+     * @param lastTime
+     * @param endTime
+     * @param downloadSize
+     * @return   下载速度，单位暂定KB
+     */
+    public static int caculateDownloadVelocity(long lastTime, long endTime, int downloadSize) {
+
+        long during = (endTime - lastTime);
+        long time = during == 0 ? 1 : during;
+        long velocity = (long) (downloadSize / (time / 1.0));
+
+        return (int) velocity;
+    }
+
+    /**
+     * 计算文件的下载进度
+     * @param downloadLength
+     * @param fileTotalLength
+     * @return    下载百分比
+     */
+    public static int calculateDownloadProgress(int downloadLength, int fileTotalLength) {
+
+        return (int) ((downloadLength * 1.0 / fileTotalLength) * 100);
+    }
 }

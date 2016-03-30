@@ -1,41 +1,29 @@
 package test.bluerain.youku.com.downloadmechine.bean;
 
-import android.util.Log;
-
 import java.util.concurrent.ExecutorService;
-
-import test.bluerain.youku.com.downloadmechine.IDownloadService;
-import test.bluerain.youku.com.downloadmechine.utils.NetworkFileEngine;
 
 /**
  * Created by rain on 2016/3/27.
  */
-public class DownloadTask implements IDownloadService {
-
+public class DownloadTask extends DownloadTaskStatus {
 
     private String mKey;
 
-    private DownloadInfo mDownloadInfo;
+    private NormalDownloadStatus mNormalDownloadStatus;
 
-    private NetworkFileEngine mNetworkFileEngine;
-
-    private DownloadAbleStatus mDownloadAbleStatus;
-
-    private DownloadingStatus mDownloadingStatus;
-
-    private DownloadedStatus mDownloadedStatus;
-
-    private IDownloadService mCurrentStatus;
-
+    private DownloadTaskStatus mCurrentStatus;
 
     public DownloadTask(DownloadInfo info, ExecutorService executor) {
+        super(info, executor, null);
         mDownloadInfo = info;
-        setTaskKey(mDownloadInfo);
-        mNetworkFileEngine = new NetworkFileEngine(mDownloadInfo.mDownloadUrl, mDownloadInfo.getmFileCurrentLength(), -1);
-        mDownloadAbleStatus = new DownloadAbleStatus(info, executor, this);
-        mCurrentStatus = mDownloadAbleStatus;
+        mKey = mDownloadInfo.getDownloadUrl();
+        initStatus();
+        setCurrentStatus(mNormalDownloadStatus);
     }
 
+    private void initStatus() {
+        mNormalDownloadStatus = new NormalDownloadStatus(mDownloadInfo, mExecutor, this);
+    }
 
     @Override
     public void startDownload() {
@@ -62,62 +50,47 @@ public class DownloadTask implements IDownloadService {
 
     }
 
-    public void setCurrentStatus(IDownloadService status) {
+    @Override
+    public void onGetNetworkFileInfo(String URL, int fileTotalLength, String fileSavePath) {
+        mCurrentStatus.onGetNetworkFileInfo(URL, fileTotalLength, fileSavePath);
+    }
+
+    @Override
+    public void onProgressUpdate(byte[] downloadData, int downloadLength, long updateTime) {
+        mCurrentStatus.onProgressUpdate(downloadData, downloadLength, updateTime);
+    }
+
+    @Override
+    public void onFileDownloaded(String URL, int fileTotalLength, String fileSavePath) {
+        mCurrentStatus.onFileDownloaded(URL, fileTotalLength, fileSavePath);
+    }
+
+    @Override
+    public void onGetError(String errorMsg) {
+        mCurrentStatus.onGetError(errorMsg);
+    }
+
+
+    //--------------getter & setter  method ---------------------------start---------------------
+
+
+    public void setCurrentStatus(DownloadTaskStatus status) {
         mCurrentStatus = status;
+        mCurrentStatus.getNetworkFileLoader().setLoaderCallback(mCurrentStatus);
     }
 
-
-//--------------getter & setter  method ---------------------------start---------------------
-
-    public DownloadInfo getDownloadInfo() {
-        return mDownloadInfo;
+    public String getKey() {
+        return mKey;
     }
 
-    public void setDownloadInfo(DownloadInfo downloadInfo) {
-        mDownloadInfo = downloadInfo;
-    }
-
-    public NetworkFileEngine getNetworkFileEngine() {
-        return mNetworkFileEngine;
-    }
-
-    public void setNetworkFileEngine(NetworkFileEngine networkFileEngine) {
-        mNetworkFileEngine = networkFileEngine;
-    }
-
-    public IDownloadService getCurrentStatus() {
+    public DownloadTaskStatus getCurrentStatus() {
         return mCurrentStatus;
     }
 
-    public DownloadAbleStatus getDownloadAbleStatus() {
-        return mDownloadAbleStatus;
+    public NormalDownloadStatus getNormalDownloadStatus() {
+        return mNormalDownloadStatus;
     }
 
-    public void setDownloadAbleStatus(DownloadAbleStatus downloadAbleStatus) {
-        mDownloadAbleStatus = downloadAbleStatus;
-    }
-
-    public DownloadingStatus getDownloadingStatus() {
-        return mDownloadingStatus;
-    }
-
-    public void setDownloadingStatus(DownloadingStatus downloadingStatus) {
-        Log.d("TAG", "task change to downloading status ......");
-        mDownloadingStatus = downloadingStatus;
-    }
-
-    public DownloadedStatus getDownloadedStatus() {
-        return mDownloadedStatus;
-    }
-
-    public void setDownloadedStatus(DownloadedStatus downloadedStatus) {
-        mDownloadedStatus = downloadedStatus;
-    }
-
-    public void setTaskKey(DownloadInfo info) {
-        if (null != info)
-            mKey = info.getmDownloadUrl();
-    }
-//--------------getter & setter  method ---------------------------end---------------------
+    //--------------getter & setter  method ---------------------------end---------------------
 
 }
