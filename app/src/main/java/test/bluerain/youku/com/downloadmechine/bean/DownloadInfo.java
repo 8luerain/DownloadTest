@@ -18,6 +18,8 @@ public class DownloadInfo {
 
     public int mFileDownloadedLength;
 
+    public boolean isStop;
+
     public String mSavedPath;
 
     public IDownloadInfoChangeListener mIDownloadInfoChangeListener;
@@ -31,6 +33,31 @@ public class DownloadInfo {
         setFileDownloadedLength(0);
         setProgress(0);
         setVelocity(0);
+        isStop = false;
+    }
+
+
+    public void start() {
+        isStop = false;
+        if (!isNullListener())
+            mIDownloadInfoChangeListener.onStartDownload();
+    }
+
+    public void stop() {
+        isStop = true;
+        if (!isNullListener())
+            mIDownloadInfoChangeListener.onStopDownload();
+    }
+
+    public void cancel() {
+        initParams();
+        if (!isNullListener())
+            mIDownloadInfoChangeListener.onCancelDownload();
+    }
+
+    public void finish() {
+        if (!isNullListener())
+            mIDownloadInfoChangeListener.onFinishDownload();
     }
 
 
@@ -105,6 +132,14 @@ public class DownloadInfo {
     }
 
     public interface IDownloadInfoChangeListener {
+
+        void onStartDownload();
+
+        void onStopDownload();
+
+        void onCancelDownload();
+
+        void onFinishDownload();
 
         void onProgressChange(int progress);
 

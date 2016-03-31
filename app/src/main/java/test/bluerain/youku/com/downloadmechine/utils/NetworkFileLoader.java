@@ -30,7 +30,9 @@ public class NetworkFileLoader implements Runnable {
 
     private String mFileURL;
 
-    private boolean mSwitcher = true;
+    private boolean mSwitcher;
+
+    private HttpURLConnection mHttpURLConnection;
 
     private LoaderCallback mLoaderCallback;
 
@@ -63,34 +65,26 @@ public class NetworkFileLoader implements Runnable {
         mLength = length;
     }
 
-    @Override
-    public void run() {
-        Log.d("TAG", "startEngine start........");
+    private void initConnection() {
         try {
             URL url = new URL(mFileURL);
-            HttpURLConnection httpURLConnection = (HttpURLConnection) url
-                    .openConnection();
-            httpURLConnection.setRequestMethod("GET");
-            httpURLConnection.setRequestProperty("Accept-Encoding",
+            mHttpURLConnection = (HttpURLConnection) url.openConnection();
+            mHttpURLConnection.setRequestMethod("GET");
+            mHttpURLConnection.setRequestProperty("Accept-Encoding",
                     "identity");
-            httpURLConnection.addRequestProperty("Connection", "keep-alive");
-            httpURLConnection.setConnectTimeout(5000);
-            httpURLConnection.setReadTimeout(10000);
-            httpURLConnection.setRequestProperty("Range", "bytes="
+            mHttpURLConnection.addRequestProperty("Connection", "keep-alive");
+            mHttpURLConnection.setConnectTimeout(5000);
+            mHttpURLConnection.setReadTimeout(10000);
+            mHttpURLConnection.setRequestProperty("Range", "bytes="
                     + mFileOffset + "-" + (mLength != -1 ? mLength + "" : ""));
-            httpURLConnection.connect();
-            if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK
-                    || httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_PARTIAL
-                    ) {
-                mFileSize = httpURLConnection.getContentLength();
+            if (mHttpURLConnection.getResponseCode() == HttpURLConnection.HTTP_PARTIAL) {
+                mSwitcher = true;
+                mFileSize = mHttpURLConnection.getContentLength() + mFileOffset;
                 if (null != mLoaderCallback)
                     mLoaderCallback.onGetNetworkFileInfo(mFileURL, mFileSize, mFilePath);
-                startEngine(httpURLConnection);
-                httpURLConnection.disconnect();
-                checkOrSetFileDownloaded();
             } else {
                 if (null != mLoaderCallback)
-                    mLoaderCallback.onGetError("service error response code is " + httpURLConnection.getResponseCode());
+                    mLoaderCallback.onGetError("service error response code is " + mHttpURLConnection.getResponseCode());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -99,14 +93,23 @@ public class NetworkFileLoader implements Runnable {
         }
     }
 
+    @Override
+    public void run() {
+        Log.d("TAG", "startEngine start........");
+        initConnection();
+        startEngine(mHttpURLConnection);
+        checkOrSetFileDownloaded();
+//        clearCallBacks();
+    }
+
+
     private void checkOrSetFileDownloaded() {
-        mSwitcher = true;
-        if ((mFileOffset + mTotalReadCount) == mFileSize) {
+        Log.d("TAG", "plus is " + mFileOffset + "totle is " + mFileSize);
+        if ((mFileOffset) == mFileSize) {
             if (null != mLoaderCallback)
                 mLoaderCallback.onFileDownloaded(mFileURL, mFileSize, mFilePath);
         }
     }
-
 
     /**
      * 由connect开始下载文件
@@ -121,11 +124,11 @@ public class NetworkFileLoader implements Runnable {
         try {
             bufferedInputStream = new BufferedInputStream(connection.getInputStream());
             bufferedOutputStream = new BufferedOutputStream(
-                    new FileOutputStream(FileUtils.getFileFromPath(mFilePath))
+                    new FileOutputStream(FileUtils.getFileFromPath(mFilePath), true)
             );
             while ((readCount = bufferedInputStream.read(block)) != -1 && mSwitcher) {
                 bufferedOutputStream.write(block, 0, readCount);
-                mTotalReadCount += readCount;
+                mFileOffset += readCount;
                 if (null != mLoaderCallback) {
                     mLoaderCallback.onProgressUpdate(block, readCount, System.currentTimeMillis());
                 }
@@ -139,6 +142,10 @@ public class NetworkFileLoader implements Runnable {
             FileUtils.closeQuilty(bufferedOutputStream);
         }
 
+    }
+
+    private void clearCallBacks() {
+        mLoaderCallback = null;
     }
 
     public interface LoaderCallback {

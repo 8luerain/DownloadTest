@@ -76,7 +76,6 @@ public class DownloadTask extends DownloadTaskStatus {
 
     public void setCurrentStatus(DownloadTaskStatus status) {
         mCurrentStatus = status;
-        mCurrentStatus.getNetworkFileLoader().setLoaderCallback(mCurrentStatus);
     }
 
     public String getKey() {

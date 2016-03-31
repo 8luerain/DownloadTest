@@ -31,9 +31,11 @@ public abstract class DownloadTaskStatus implements IDownloadService, NetworkFil
 
     private void initLoader() {
         mNetworkFileLoader = new NetworkFileLoader(mDownloadInfo.getDownloadUrl(), mDownloadInfo.mSavedPath);
+        mNetworkFileLoader.setLoaderCallback(this);
     }
 
     public NetworkFileLoader getNetworkFileLoader() {
         return mNetworkFileLoader;
     }
+
 }

@@ -1,5 +1,7 @@
 package test.bluerain.youku.com.downloadmechine.utils;
 
+import android.util.Log;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -17,9 +19,10 @@ public class FileUtils {
     public static File getFileFromPath(String path) {
         File file = new File(path);
         try {
-            if (!file.exists()) {
-                file.createNewFile();
+            if (!file.getParentFile().exists()) {
+                file.getParentFile().mkdirs();
             }
+            file.createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -28,11 +31,21 @@ public class FileUtils {
 
 
     public static boolean removeFileFromPath(String path) {
+        Log.d("TAG", "remove file path is ......." + path);
         File file = new File(path);
         if (!file.exists()) {
             return true;
         }
         return file.delete();
+    }
+
+    public static boolean renameFile(String orgFilePath, String newFilePath) {
+        File file = new File(orgFilePath);
+        if (!file.exists()) {
+            return false;
+        }
+        file.renameTo(new File(newFilePath));
+        return true;
     }
 
     public static void closeQuilty(Closeable closeable) {
@@ -66,10 +79,11 @@ public class FileUtils {
 
     /**
      * 计算文件的下载速度
+     *
      * @param lastTime
      * @param endTime
      * @param downloadSize
-     * @return   下载速度，单位暂定KB
+     * @return 下载速度，单位暂定KB
      */
     public static int caculateDownloadVelocity(long lastTime, long endTime, int downloadSize) {
 
@@ -82,9 +96,10 @@ public class FileUtils {
 
     /**
      * 计算文件的下载进度
+     *
      * @param downloadLength
      * @param fileTotalLength
-     * @return    下载百分比
+     * @return 下载百分比
      */
     public static int calculateDownloadProgress(int downloadLength, int fileTotalLength) {
 

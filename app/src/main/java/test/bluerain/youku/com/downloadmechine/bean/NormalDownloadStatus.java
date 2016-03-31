@@ -22,21 +22,24 @@ public class NormalDownloadStatus extends DownloadTaskStatus {
 
     @Override
     public void startDownload() {
-        Log.d("TAG", "download start ......");
+        Log.d("TAG", "download start & fileLength is " + mDownloadInfo.mFileLength + "......");
+        mDownloadInfo.start();
         mNetworkFileLoader.setFileOffset(mDownloadInfo.mFileDownloadedLength);
         mExecutor.execute(mNetworkFileLoader);
     }
 
     @Override
     public void pauseDownload() {
+        mDownloadInfo.stop();
         mNetworkFileLoader.stopLoader();
     }
 
     @Override
     public void cancelDownload() {
+        mDownloadInfo.cancel();
         mNetworkFileLoader.stopLoader();
-        mDownloadInfo.resetDownloadInfo();
         FileUtils.removeFileFromPath(mDownloadInfo.getSavedPath());
+        Log.d("TAG", "clear dataed ...... file length is " + mDownloadInfo.getFileLength());
     }
 
     @Override
@@ -59,7 +62,11 @@ public class NormalDownloadStatus extends DownloadTaskStatus {
 
     @Override
     public void onFileDownloaded(String URL, int fileTotalLength, String fileSavePath) {
-
+        mDownloadInfo.finish();
+        Log.d("TAG", "Filedownload...........");
+        String replace = mDownloadInfo.mSavedPath.replace(".tmp", "");
+        FileUtils.renameFile(mDownloadInfo.mSavedPath, replace);
+        mDownloadInfo.setSavedPath(replace);
     }
 
     @Override

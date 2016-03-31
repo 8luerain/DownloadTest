@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.concurrent.Executors;
 
@@ -27,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
 
     private DownloadTask mDownloadTask;
 
-    private boolean mIsStarted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private void initData() {
         DownloadInfo info = new DownloadInfo();
         info.setDownloadUrl("http://test.gamex.mobile.youku.com/apkdowload/1457516569_1385103059_com.ecapycsw.onetouchdrawing.1381221038291.apk");
-        info.setSavedPath(Environment.getExternalStorageDirectory() + "/downloadTest/" + "test" + ".tmp");
+        info.setSavedPath(Environment.getExternalStorageDirectory() + "/downloadTest/" + "test" + ".apk.tmp");
         info.setDownloadInfoChangeListener(new DownloadInfo.IDownloadInfoChangeListener() {
             @Override
             public void onProgressChange(final int progress) {
@@ -70,6 +70,31 @@ public class MainActivity extends AppCompatActivity {
             public void onFileCurrentLengthChangeListener(int fileLength) {
 //                    Log.d("TAG", "onFileCurrentLengthChangeListener ....... now is..." + fileLength + "KB");
             }
+
+            @Override
+            public void onStartDownload() {
+                setButtonToStopStatus();
+            }
+
+            @Override
+            public void onStopDownload() {
+                setButtonToStartStatus();
+            }
+
+            @Override
+            public void onCancelDownload() {
+                setButtonToStartStatus();
+            }
+
+            @Override
+            public void onFinishDownload() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "下载完成", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         });
         mDownloadTask = new DownloadTask(info, Executors.newFixedThreadPool(2));
     }
@@ -87,15 +112,17 @@ public class MainActivity extends AppCompatActivity {
         mProgressBar = (ProgressBar) findViewById(R.id.id_pgb_main);
     }
 
+
     private void setButtonToStartStatus() {
         mButtonStart.setText("开始下载");
         mButtonStart.setOnClickListener(new StartDownloadListener());
     }
 
-    private void setButtonTPauseStatus() {
+    private void setButtonToStopStatus() {
         mButtonStart.setText("暂停下载");
         mButtonStart.setOnClickListener(new PauseDownloadListener());
     }
+
 
     class SetNormalListener implements View.OnClickListener {
         @Override
@@ -114,11 +141,8 @@ public class MainActivity extends AppCompatActivity {
     class StartDownloadListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
-            if (!mIsStarted) {
-                mDownloadTask.startDownload();
-                mIsStarted = true;
-                setButtonTPauseStatus();
-            }
+            Log.d("TAG", "start button click......");
+            mDownloadTask.startDownload();
         }
     }
 
@@ -127,17 +151,15 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onClick(View v) {
-            if (mIsStarted) {
-                mIsStarted = false;
-                mDownloadTask.pauseDownload();
-                setButtonToStartStatus();
-            }
+            Log.d("TAG", "stop button click......");
+            mDownloadTask.pauseDownload();
         }
     }
 
     class CancelDownloadListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
+            Log.d("TAG", "cancel button click......");
             mDownloadTask.cancelDownload();
         }
     }
